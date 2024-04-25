@@ -40,26 +40,70 @@ def get_bedrock_client():
     if not bedrock:
         bedrock = boto3.client(service_name='bedrock-runtime', config=config)
     return bedrock
+def invoke_mode_apihub(model_id,prompt):
+    url = 'https://api-spp.eclicktech.com.cn/gsi/blackholecn/blackhole/overseaa/ai/clouds/stream'
+    headers = {
+        'x-apihub-env': 'prodbe',
+        'x-apihub-ak': '81a9cca49ef3467a8c787c111216ca88'
+    }
+    params = {
+        'prompt': prompt,
+        'modelCode': model_id
+    }
 
+    response = requests.get(url, headers=headers, params=params)
+    print(str(response.status_code), '\n', response.text[:100])
+    return response
 
-def invoke_model_claude3(model_id, system_prompt, messages, max_tokens, with_response_stream=False):
-    body = json.dumps(
-        {
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": max_tokens,
-            "system": system_prompt,
-            "messages": messages,
-            "temperature": 0.01
-        }
-    )
+# def invoke_mode_apihub(model_id,prompt):
+#     url = 'https://api-spp.eclicktech.com.cn/gsi/blackholecn/blackhole/overseaa/ai/clouds/stream'
+#     headers = {
+#         'x-apihub-env': 'prodhw',
+#         'x-apihub-ak': '81a9cca49ef3467a8c787c111216ca88'
+#     }
+#     params = {
+#         'prompt': prompt,
+#         'modelCode': model_id
+#     }
 
-    if with_response_stream:
-        response = get_bedrock_client().invoke_model_with_response_stream(body=body, modelId=model_id)
-        return response
-    else:
-        response = get_bedrock_client().invoke_model(body=body, modelId=model_id)
-        response_body = json.loads(response.get('body').read())
-        return response_body
+#     response = requests.get(url, headers=headers, params=params)
+#     print(str(response.text.replace('data:','')))
+#     #replace('\n','')
+#     return response
+def invoke_model_claude3(ddl, hints, search_box, examples=None, model_id=None, dialect='mysql', model_provider=None):
+    user_prompt, system_prompt = generate_prompt(ddl, hints, search_box, examples, model_id, dialect=dialect)
+
+    max_tokens = 2048
+
+    # Prompt with user turn only.
+    user_message = {"role": "user", "content": user_prompt}
+    # messages = [user_message]
+    logger.info(f'{system_prompt=}')
+    logger.info(f'{user_message=}')
+    prompt = f"{system_prompt} {user_message}"
+    response = invoke_mode_apihub(model_id,prompt, max_tokens)
+    final_response = response.text
+
+    return final_response
+
+# def invoke_model_claude3(model_id, system_prompt, messages, max_tokens, with_response_stream=False):
+#     body = json.dumps(
+#         {
+#             "anthropic_version": "bedrock-2023-05-31",
+#             "max_tokens": max_tokens,
+#             "system": system_prompt,
+#             "messages": messages,
+#             "temperature": 0.01
+#         }
+#     )
+
+#     if with_response_stream:
+#         response = get_bedrock_client().invoke_model_with_response_stream(body=body, modelId=model_id)
+#         return response
+#     else:
+#         response = get_bedrock_client().invoke_model(body=body, modelId=model_id)
+#         response_body = json.loads(response.get('body').read())
+#         return response_body
 
 
 def invoke_llama_70b(model_id, system_prompt, user_prompt, max_tokens, with_response_stream=False):
@@ -356,30 +400,46 @@ def agent_data_analyse(model_id, search_box, sql_data):
     return ""
 
 
+# def get_query_intent(model_id, search_box):
+#     default_intent = {"intent": "normal_search"}
+#     try:
+#         intent_endpoint = os.getenv("SAGEMAKER_ENDPOINT_INTENT")
+#         if intent_endpoint:
+#             # TODO may need to modify the prompt
+#             body = json.dumps(
+#                 {"query": generate_sagemaker_intent_prompt(search_box, meta_instruction=SEARCH_INTENT_PROMPT_CLAUDE3)})
+#             response = invoke_model_sagemaker_endpoint(intent_endpoint, body)
+#             logger.info(f'{response=}')
+#             intent_result_dict = json_parse.parse(response)
+#             return intent_result_dict
+#         else:
+#             system_prompt = SEARCH_INTENT_PROMPT_CLAUDE3
+#             max_tokens = 2048
+#             user_message = {"role": "user", "content": search_box}
+#             messages = [user_message]
+#             response = invoke_model_claude3(model_id, system_prompt, messages, max_tokens)
+#             final_response = response.get("content")[0].get("text")
+#             logger.info(f'{final_response=}')
+#             intent_result_dict = json_parse.parse(final_response)
+#             return intent_result_dict
+#     except Exception as e:
+#         logger.error("get_query_intent is error:{}".format(e))
+#         return default_intent
+
 def get_query_intent(model_id, search_box):
     default_intent = {"intent": "normal_search"}
     try:
-        intent_endpoint = os.getenv("SAGEMAKER_ENDPOINT_INTENT")
-        if intent_endpoint:
-            # TODO may need to modify the prompt
-            body = json.dumps(
-                {"query": generate_sagemaker_intent_prompt(search_box, meta_instruction=SEARCH_INTENT_PROMPT_CLAUDE3)})
-            response = invoke_model_sagemaker_endpoint(intent_endpoint, body)
-            logger.info(f'{response=}')
-            intent_result_dict = json_parse.parse(response)
-            return intent_result_dict
-        else:
-            system_prompt = SEARCH_INTENT_PROMPT_CLAUDE3
-            max_tokens = 2048
-            user_message = {"role": "user", "content": search_box}
-            messages = [user_message]
-            response = invoke_model_claude3(model_id, system_prompt, messages, max_tokens)
-            final_response = response.get("content")[0].get("text")
-            logger.info(f'{final_response=}')
-            intent_result_dict = json_parse.parse(final_response)
-            return intent_result_dict
+        system_prompt = SEARCH_INTENT_PROMPT_CLAUDE3
+        max_tokens = 2048
+        user_message = {"role": "user", "content": search_box}
+        # messages = [user_message]
+        prompt = f"{system_prompt} {user_message}"
+        response = invoke_mode_apihub(model_id,prompt, max_tokens)
+        final_response = response.text
+        logger.info(f'{final_response=}')
+        intent_result_dict = json_parse.parse(final_response)
+        return intent_result_dict
     except Exception as e:
-        logger.error("get_query_intent is error:{}".format(e))
         return default_intent
 
 
