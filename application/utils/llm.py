@@ -48,7 +48,7 @@ def invoke_mode_apihub(model_id,prompt):
     }
     params = {
         'prompt': prompt,
-        'modelCode': model_id
+        'modelCode': "1"
     }
 
     response = requests.get(url, headers=headers, params=params)
