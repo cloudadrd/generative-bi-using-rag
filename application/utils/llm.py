@@ -41,10 +41,12 @@ def get_bedrock_client():
         bedrock = boto3.client(service_name='bedrock-runtime', config=config)
     return bedrock
 def invoke_mode_apihub(model_id,system_prompt,prompt,max_tokens):
+    # 流式接口
     #url = 'https://api-sgp.eclicktech.com.cn/gst/blackholecn/blackhole/overseas/ai/claude3/streamBody'
+    # 非流接口
     url = 'https://api-sgp.eclicktech.com.cn/gst/blackholecn/blackhole/overseas/ai/claude3/claude3Body'
 
-# 定义请求头
+    # 定义请求头
     headers = {
         'x-apihub-env': 'prod',
         'x-apihub-ak': '81a9cca49ef3467a8c787c111216ca08',
@@ -58,61 +60,15 @@ def invoke_mode_apihub(model_id,system_prompt,prompt,max_tokens):
         "system": system_prompt
     }
     response = requests.post(url, headers=headers, json=data)
-    #print(str(response.status_code), '\n', response.text[:100])
-    logger.info("response =  " + response.url)
     fin_response = json.loads(response.text)['data']
-    logger.info(f'{fin_response=}')
+    #logger.info(f'{fin_response=}')
     return fin_response
 
-# def invoke_mode_apihub(model_id,prompt):
-#     url = 'https://api-spp.eclicktech.com.cn/gsi/blackholecn/blackhole/overseaa/ai/clouds/stream'
-#     headers = {
-#         'x-apihub-env': 'prodhw',
-#         'x-apihub-ak': '81a9cca49ef3467a8c787c111216ca88'
-#     }
-#     params = {
-#         'prompt': prompt,
-#         'modelCode': model_id
-#     }
-
-#     response = requests.get(url, headers=headers, params=params)
-#     print(str(response.text.replace('data:','')))
-#     #replace('\n','')
-#     return response
 def invoke_model_claude3(model_id, system_prompt, messages, max_tokens, with_response_stream):
-    #user_prompt, system_prompt = generate_prompt(ddl, hints, search_box, examples, model_id, dialect=dialect)
-
     max_tokens = 2048
-
-    # Prompt with user turn only.
-    #user_message = {"role": "user", "content": user_prompt}
-    # messages = [user_message]
-    # logger.info(f'{system_prompt=}')
-    # logger.info(f'{user_message=}')
-    # prompt = f"{x} {user_message}"
     response = invoke_mode_apihub(model_id,system_prompt,messages, max_tokens)
     final_response = response
-
     return final_response
-
-# def invoke_model_claude3(model_id, system_prompt, messages, max_tokens, with_response_stream=False):
-#     body = json.dumps(
-#         {
-#             "anthropic_version": "bedrock-2023-05-31",
-#             "max_tokens": max_tokens,
-#             "system": system_prompt,
-#             "messages": messages,
-#             "temperature": 0.01
-#         }
-#     )
-
-#     if with_response_stream:
-#         response = get_bedrock_client().invoke_model_with_response_stream(body=body, modelId=model_id)
-#         return response
-#     else:
-#         response = get_bedrock_client().invoke_model(body=body, modelId=model_id)
-#         response_body = json.loads(response.get('body').read())
-#         return response_body
 
 
 def invoke_llama_70b(model_id, system_prompt, user_prompt, max_tokens, with_response_stream=False):
