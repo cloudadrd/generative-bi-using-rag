@@ -40,20 +40,29 @@ def get_bedrock_client():
     if not bedrock:
         bedrock = boto3.client(service_name='bedrock-runtime', config=config)
     return bedrock
-def invoke_mode_apihub(model_id,prompt):
-    url = 'https://api-spp.eclicktech.com.cn/gsi/blackholecn/blackhole/overseaa/ai/clouds/stream'
+def invoke_mode_apihub(model_id,system_prompt,prompt,max_tokens):
+    #url = 'https://api-sgp.eclicktech.com.cn/gst/blackholecn/blackhole/overseas/ai/claude3/streamBody'
+    url = 'https://api-sgp.eclicktech.com.cn/gst/blackholecn/blackhole/overseas/ai/claude3/claude3Body'
+
+# 定义请求头
     headers = {
-        'x-apihub-env': 'prodbe',
-        'x-apihub-ak': '81a9cca49ef3467a8c787c111216ca88'
-    }
-    params = {
-        'prompt': prompt,
-        'modelCode': "1"
+        'x-apihub-env': 'prod',
+        'x-apihub-ak': '81a9cca49ef3467a8c787c111216ca08',
+        'Content-Type': 'application/json'
     }
 
-    response = requests.get(url, headers=headers, params=params)
-    print(str(response.status_code), '\n', response.text[:100])
-    return response
+    # 定义请求数据
+    data = {
+        "prompt": prompt,
+        "modelCode": 1,
+        "system": system_prompt
+    }
+    response = requests.post(url, headers=headers, json=data)
+    #print(str(response.status_code), '\n', response.text[:100])
+    logger.info("response =  " + response.url)
+    fin_response = json.loads(response.text)['data']
+    logger.info(f'{fin_response=}')
+    return fin_response
 
 # def invoke_mode_apihub(model_id,prompt):
 #     url = 'https://api-spp.eclicktech.com.cn/gsi/blackholecn/blackhole/overseaa/ai/clouds/stream'
@@ -70,19 +79,19 @@ def invoke_mode_apihub(model_id,prompt):
 #     print(str(response.text.replace('data:','')))
 #     #replace('\n','')
 #     return response
-def invoke_model_claude3(ddl, hints, search_box, examples=None, model_id=None, dialect='mysql', model_provider=None):
-    user_prompt, system_prompt = generate_prompt(ddl, hints, search_box, examples, model_id, dialect=dialect)
+def invoke_model_claude3(model_id, system_prompt, messages, max_tokens, with_response_stream):
+    #user_prompt, system_prompt = generate_prompt(ddl, hints, search_box, examples, model_id, dialect=dialect)
 
     max_tokens = 2048
 
     # Prompt with user turn only.
-    user_message = {"role": "user", "content": user_prompt}
+    #user_message = {"role": "user", "content": user_prompt}
     # messages = [user_message]
-    logger.info(f'{system_prompt=}')
-    logger.info(f'{user_message=}')
-    prompt = f"{system_prompt} {user_message}"
-    response = invoke_mode_apihub(model_id,prompt, max_tokens)
-    final_response = response.text
+    # logger.info(f'{system_prompt=}')
+    # logger.info(f'{user_message=}')
+    # prompt = f"{x} {user_message}"
+    response = invoke_mode_apihub(model_id,system_prompt,messages, max_tokens)
+    final_response = response
 
     return final_response
 
@@ -211,6 +220,7 @@ def claude_select_table():
 
 def generate_prompt(ddl, hints, search_box, sql_examples=None, ner_example=None, model_id=None, dialect='mysql'):
     long_string = ""
+    logger.info("generate_prompt ddl is :" + str(ddl))
     for table_name, table_data in ddl.items():
         ddl_string = table_data["col_a"] if 'col_a' in table_data else table_data["ddl"]
         long_string += "-- {}表：{}\n".format(table_name, table_data["tbl_a"] if 'tbl_a' in table_data else table_data[
@@ -293,10 +303,12 @@ def invoke_llm_model(model_id, system_prompt, user_prompt, max_tokens=2018, with
     messages = [user_message]
     logger.info(f'{system_prompt=}')
     logger.info(f'{messages=}')
+    logger.info(f'{model_id=}')
     response = ""
     try:
         if model_id.startswith('anthropic.claude-3-'):
-            response = invoke_model_claude3(model_id, system_prompt, messages, max_tokens, with_response_stream)
+            response = invoke_model_claude3(model_id, system_prompt, str(messages), max_tokens, with_response_stream)
+            logger.info(f'{response=}')
         elif model_id.startswith('mistral.mixtral-8x7b'):
             response = invoke_mixtral_8x7b(model_id, system_prompt, messages, max_tokens, with_response_stream)
         elif model_id.startswith('meta.llama3-70b'):
@@ -307,7 +319,8 @@ def invoke_llm_model(model_id, system_prompt, user_prompt, max_tokens=2018, with
             if model_id.startswith('meta.llama3-70b'):
                 return response["generation"]
             else:
-                final_response = response.get("content")[0].get("text")
+                final_response = response
+                #.get("content")[0].get("text")
                 return final_response
     except Exception as e:
         logger.error("invoke_llm_model error {}".format(e))
@@ -316,6 +329,7 @@ def invoke_llm_model(model_id, system_prompt, user_prompt, max_tokens=2018, with
 
 def text_to_sql(ddl, hints, search_box, sql_examples=None, ner_example=None, model_id=None, dialect='mysql',
                 model_provider=None, with_response_stream=False):
+    print(ddl)
     user_prompt, system_prompt = generate_llm_prompt(ddl, hints, search_box, sql_examples, ner_example, model_id,
                                                      dialect=dialect)
     max_tokens = 2048
