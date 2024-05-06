@@ -64,7 +64,7 @@ def invoke_mode_apihub(model_id,system_prompt,prompt,max_tokens):
     #logger.info(f'{fin_response=}')
     return fin_response
 
-def invoke_model_claude3(model_id, system_prompt, messages, max_tokens, with_response_stream):
+def invoke_model_claude3(model_id, system_prompt, messages, max_tokens, with_response_stream=False):
     max_tokens = 2048
     response = invoke_mode_apihub(model_id,system_prompt,messages, max_tokens)
     final_response = response
