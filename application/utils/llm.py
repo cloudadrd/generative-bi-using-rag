@@ -533,6 +533,7 @@ def generate_suggested_question(search_box, system_prompt, model_id=None):
     logger.info(f'{messages=}')
     #response = invoke_model_claude3(model_id, system_prompt, messages, max_tokens)
     response = invoke_model_claude3(model_id, system_prompt, user_prompt, max_tokens)
-    final_response = response.get("content")[0].get("text")
+    final_response = response
+    #.get("content")[0].get("text")
 
     return final_response
