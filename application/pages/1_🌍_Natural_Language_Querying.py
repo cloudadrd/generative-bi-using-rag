@@ -137,7 +137,7 @@ def main():
             opensearch_config[key] = os.getenv(opensearch_config[key].replace('$', ''))
         # logger.info(f'{opensearch_config=}')
 
-    st.set_page_config(page_title="Natural Language Querying", layout="wide")
+    st.set_page_config(page_title="自然语言查询", layout="wide")
     make_sidebar()
 
     # Title and Description
