@@ -146,6 +146,7 @@ def main():
     Welcome to the Natural Language Querying Playground! This interactive application is designed to bridge the gap between natural language and databases. 
     Enter your query in plain English, and watch as it's transformed into a SQL or Pandas command. The result can then be visualized, giving you insights without needing to write any code. 
     Experiment, learn, and see the power of NLQ in action!
+             1、尽量使用完整日期写,格式无所谓,系统默认时间
     """)
     st.divider()
 
@@ -209,10 +210,10 @@ def main():
 
         use_rag = st.checkbox("Using RAG from Q/A Embedding", True)
         visualize_results = st.checkbox("Visualize Results", True)
-        intent_ner_recognition = st.checkbox("Intent NER", False)
-        agent_cot = st.checkbox("Agent COT", False)
-        explain_gen_process_flag = st.checkbox("Explain Generation Process", True)
-        gen_suggested_question = st.checkbox("Generate Suggested Questions", False)
+        intent_ner_recognition = st.checkbox("Intent NER", True)
+        agent_cot = st.checkbox("Agent COT", True)
+        explain_gen_process_flag = st.checkbox("Explain Generation Process", False)
+        gen_suggested_question = st.checkbox("Generate Suggested Questions", True)
 
         clean_history = st.button("clean history", on_click=clean_st_histoty, args=[selected_profile])
 
