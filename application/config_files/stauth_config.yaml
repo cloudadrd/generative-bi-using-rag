@@ -4,8 +4,8 @@ credentials:
       email: amazon@amazon.com
       failed_login_attempts: 0 # Will be managed automatically
       logged_in: False # Will be managed automatically
-      name: AWS
-      password: $2b$12$7F/Uto8cv9Fly.CFrdHvduOsOPvwjPGBloLTfTTM9r502xu4Kbw/6
+      name: yeahmobi
+      password: $2b$12$IV4WKDWOf2WsxJiWHJjd8e21bCHqeM5pGne0n9Ua6ar.LBnWwj/mK
 cookie:
   expiry_days: 36000
   key: some_signature_key # Must be string
