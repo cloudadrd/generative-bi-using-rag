@@ -4,8 +4,15 @@ credentials:
       email: amazon@amazon.com
       failed_login_attempts: 0 # Will be managed automatically
       logged_in: False # Will be managed automatically
+      name: admin
+      password: $2b$12$7F/Uto8cv9Fly.CFrdHvduOsOPvwjPGBloLTfTTM9r502xu4Kbw/6
+  usernames:
+    yeahmobi:
+      email: amazon@amazon.com
+      failed_login_attempts: 0 # Will be managed automatically
+      logged_in: False # Will be managed automatically
       name: yeahmobi
-      password: $2b$12$IV4WKDWOf2WsxJiWHJjd8e21bCHqeM5pGne0n9Ua6ar.LBnWwj/mK
+      password: $2b$12$EsbnM2sniSjiNfIbQPMFueLU5idoL4/9vbLXS0fQKqXb7V86WAR5K
 cookie:
   expiry_days: 36000
   key: some_signature_key # Must be string
